@@ -1,9 +1,12 @@
-export type FXMacroDataQuery = Record<string, string | number | boolean | undefined | null>;
+export type FXMacroDataQuery = Record<
+  string,
+  string | number | boolean | undefined | null
+>;
 
 export class FXMacroDataClient {
   constructor(
     private readonly apiKey?: string,
-    private readonly baseUrl = 'https://api.fxmacrodata.com/v1',
+    private readonly baseUrl = 'https://api.fxmacrodata.com/v1'
   ) {}
 
   dataCatalogue(currency: string) {
@@ -71,19 +74,24 @@ export class FXMacroDataClient {
   }
 
   async get(path: string, query: FXMacroDataQuery = {}) {
-    const response = await fetch(this.url(path, query));
-    if (!response.ok) throw new Error(`FXMacroData request failed: ${response.status}`);
+    const headers: Record<string, string> = this.apiKey
+      ? { 'X-API-Key': this.apiKey }
+      : {};
+    const response = await fetch(this.url(path, query), { headers });
+    if (!response.ok)
+      throw new Error(`FXMacroData request failed: ${response.status}`);
     return response.json();
   }
 
   url(path: string, query: FXMacroDataQuery = {}) {
     const params = new URLSearchParams();
-    if (this.apiKey) params.set('api_key', this.apiKey);
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null) params.set(key, String(value));
     }
     const suffix = params.toString();
-    return `${this.baseUrl.replace(/\/$/, '')}${path}${suffix ? `?${suffix}` : ''}`;
+    return `${this.baseUrl.replace(/\/$/, '')}${path}${
+      suffix ? `?${suffix}` : ''
+    }`;
   }
 }
 
