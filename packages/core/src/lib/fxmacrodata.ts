@@ -13,32 +13,38 @@ export class FXMacroDataClient {
     return this.get(`/data_catalogue/${normalize(currency)}`);
   }
 
-  announcements(currency: string, indicator: string) {
-    return this.get(`/announcements/${normalize(currency)}/${indicator}`);
+  // History endpoints return 20 rows by default and at most 100 per request,
+  // newest first. Pass { limit, offset, start_date, end_date } in `query` and
+  // follow `pagination.next_offset` while `pagination.has_more` is true.
+  announcements(currency: string, indicator: string, query?: FXMacroDataQuery) {
+    return this.get(
+      `/announcements/${normalize(currency)}/${indicator}`,
+      query
+    );
   }
 
   calendar(currency: string) {
     return this.get(`/calendar/${normalize(currency)}`);
   }
 
-  predictions(currency: string, indicator: string) {
-    return this.get(`/predictions/${normalize(currency)}/${indicator}`);
+  predictions(currency: string, indicator: string, query?: FXMacroDataQuery) {
+    return this.get(`/predictions/${normalize(currency)}/${indicator}`, query);
   }
 
-  forex(base: string, quote: string) {
-    return this.get(`/forex/${normalize(base)}/${normalize(quote)}`);
+  forex(base: string, quote: string, query?: FXMacroDataQuery) {
+    return this.get(`/forex/${normalize(base)}/${normalize(quote)}`, query);
   }
 
-  cot(currency: string) {
-    return this.get(`/cot/${normalize(currency)}`);
+  cot(currency: string, query?: FXMacroDataQuery) {
+    return this.get(`/cot/${normalize(currency)}`, query);
   }
 
   commoditiesLatest() {
     return this.get('/commodities/latest');
   }
 
-  commodity(indicator: string) {
-    return this.get(`/commodities/${indicator}`);
+  commodity(indicator: string, query?: FXMacroDataQuery) {
+    return this.get(`/commodities/${indicator}`, query);
   }
 
   curves(currency: string) {
@@ -57,8 +63,8 @@ export class FXMacroDataClient {
     return this.get('/market_sessions');
   }
 
-  riskSentiment() {
-    return this.get('/risk_sentiment');
+  riskSentiment(query?: FXMacroDataQuery) {
+    return this.get('/risk_sentiment', query);
   }
 
   news(currency: string) {
