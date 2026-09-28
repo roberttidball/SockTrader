@@ -75,10 +75,6 @@ export class FXMacroDataClient {
     return this.get(`/press-releases/${normalize(currency)}`);
   }
 
-  centralBankers(currency: string) {
-    return this.get(`/central_bankers/${normalize(currency)}`);
-  }
-
   async get(path: string, query: FXMacroDataQuery = {}) {
     const headers: Record<string, string> = this.apiKey
       ? { 'X-API-Key': this.apiKey }
