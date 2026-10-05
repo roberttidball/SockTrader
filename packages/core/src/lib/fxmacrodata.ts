@@ -4,10 +4,19 @@ export type FXMacroDataQuery = Record<
 >;
 
 export class FXMacroDataClient {
+  private readonly apiKey?: string;
+
   constructor(
-    private readonly apiKey?: string,
+    apiKey?: string,
     private readonly baseUrl = 'https://api.fxmacrodata.com/v1'
-  ) {}
+  ) {
+    const key = apiKey?.trim();
+    // Never include the key itself in the message.
+    // eslint-disable-next-line no-control-regex
+    if (key && /[\s\x00-\x1f\x7f]/.test(key))
+      throw new Error('FXMacroData API key contains invalid characters');
+    this.apiKey = key || undefined;
+  }
 
   dataCatalogue(currency: string) {
     return this.get(`/data_catalogue/${normalize(currency)}`);
@@ -79,10 +88,23 @@ export class FXMacroDataClient {
     const headers: Record<string, string> = this.apiKey
       ? { 'X-API-Key': this.apiKey }
       : {};
-    const response = await fetch(this.url(path, query), { headers });
+    // A followed redirect would carry the X-API-Key header to the new host.
+    const response = await fetch(this.url(path, query), {
+      headers,
+      redirect: 'error',
+    });
     if (!response.ok)
       throw new Error(`FXMacroData request failed: ${response.status}`);
-    return response.json();
+    const payload = await parseJson(response);
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      !Array.isArray(payload) &&
+      'detail' in payload &&
+      !('data' in payload)
+    )
+      throw new Error(`FXMacroData request failed: ${String(payload.detail)}`);
+    return payload;
   }
 
   url(path: string, query: FXMacroDataQuery = {}) {
@@ -94,6 +116,14 @@ export class FXMacroDataClient {
     return `${this.baseUrl.replace(/\/$/, '')}${path}${
       suffix ? `?${suffix}` : ''
     }`;
+  }
+}
+
+async function parseJson(response: Response) {
+  try {
+    return await response.json();
+  } catch {
+    throw new Error('FXMacroData returned a non-JSON response');
   }
 }
 
